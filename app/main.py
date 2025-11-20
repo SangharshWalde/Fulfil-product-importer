@@ -188,6 +188,11 @@ def stream_job_events(job_id: str, db: Session = Depends(get_db)):
         last = None
         while True:
             job = db.get(models.JobProgress, job_id)
+            if job:
+                try:
+                    db.refresh(job)
+                except Exception:
+                    pass
             if not job:
                 yield f"data: {JobStatus(id=job_id, stage='unknown', status='unknown', processed_rows=0, total_rows=0).model_dump_json()}\n\n".encode()
                 break
@@ -208,10 +213,22 @@ def list_webhooks(db: Session = Depends(get_db)):
 
 @app.post("/webhooks", response_model=WebhookOut)
 def create_webhook(payload: WebhookCreate, db: Session = Depends(get_db)):
-    w = models.Webhook(url=payload.url, event=payload.event, enabled=payload.enabled)
-    db.add(w)
-    db.commit()
-    db.refresh(w)
+    if not (payload.url or "").strip():
+        raise HTTPException(status_code=400, detail="URL is required")
+    if not (payload.url.startswith("http://") or payload.url.startswith("https://")):
+        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+    w = models.Webhook(url=payload.url.strip(), event=payload.event, enabled=payload.enabled)
+    try:
+        db.add(w)
+        db.commit()
+        db.refresh(w)
+    except Exception as e:
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        logging.getLogger("app.main").error(str(e))
+        raise HTTPException(status_code=500, detail="Database error")
     return WebhookOut.model_validate(w)
 
 @app.put("/webhooks/{webhook_id}", response_model=WebhookOut)
@@ -220,13 +237,25 @@ def update_webhook(webhook_id: int, payload: WebhookUpdate, db: Session = Depend
     if not w:
         raise HTTPException(status_code=404, detail="Webhook not found")
     if payload.url is not None:
-        w.url = payload.url
+        if not payload.url.strip():
+            raise HTTPException(status_code=400, detail="URL is required")
+        if not (payload.url.startswith("http://") or payload.url.startswith("https://")):
+            raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+        w.url = payload.url.strip()
     if payload.event is not None:
         w.event = payload.event
     if payload.enabled is not None:
         w.enabled = payload.enabled
-    db.commit()
-    db.refresh(w)
+    try:
+        db.commit()
+        db.refresh(w)
+    except Exception as e:
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        logging.getLogger("app.main").error(str(e))
+        raise HTTPException(status_code=500, detail="Database error")
     return WebhookOut.model_validate(w)
 
 @app.delete("/webhooks/{webhook_id}")
@@ -234,8 +263,16 @@ def delete_webhook(webhook_id: int, db: Session = Depends(get_db)):
     w = db.get(models.Webhook, webhook_id)
     if not w:
         raise HTTPException(status_code=404, detail="Webhook not found")
-    db.delete(w)
-    db.commit()
+    try:
+        db.delete(w)
+        db.commit()
+    except Exception as e:
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        logging.getLogger("app.main").error(str(e))
+        raise HTTPException(status_code=500, detail="Database error")
     return {"ok": True}
 
 @app.post("/webhooks/{webhook_id}/test")
