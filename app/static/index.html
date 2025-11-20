@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Acme Product Importer</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Acme Product Importer</h1>
+  </header>
+
+  <main class="container">
+  <section id="upload-section" class="card">
+    <h2>Upload CSV</h2>
+    <form id="upload-form">
+      <label for="csvFile">Select CSV file</label>
+      <div class="form-row">
+        <input type="file" id="csvFile" accept=".csv" />
+        <button type="submit" class="btn">Start Import</button>
+      </div>
+    </form>
+    <div id="upload-status">
+      <div class="progress"><div id="progress-bar"></div></div>
+      <p id="progress-text">Waiting...</p>
+      <p id="progress-error" class="error" style="display:none"></p>
+    </div>
+  </section>
+
+  <section id="products-section" class="card">
+    <div class="header-row">
+      <h2>Products</h2>
+      <div class="header-actions">
+        <button id="refresh-products" class="btn">Refresh</button>
+        <button id="bulk-delete" class="btn btn-danger">Delete All</button>
+      </div>
+    </div>
+    <div class="products-layout">
+      <div class="editor">
+        <h3>Create / Update Product</h3>
+        <input id="edit-id" type="hidden" />
+        <div class="form-grid">
+          <label for="edit-sku">SKU</label>
+          <input id="edit-sku" />
+          <label for="edit-name">Name</label>
+          <input id="edit-name" />
+          <label for="edit-description">Description</label>
+          <textarea id="edit-description"></textarea>
+          <label class="checkbox-row"><input type="checkbox" id="edit-active" checked /> Active</label>
+          <div class="form-actions">
+            <button id="save-product" class="btn">Save</button>
+            <button id="reset-editor" class="btn btn-light">Reset</button>
+          </div>
+        </div>
+      </div>
+      <div class="list">
+        <div class="filters">
+          <input id="filter-sku" placeholder="SKU" />
+          <input id="filter-name" placeholder="Name" />
+          <input id="filter-description" placeholder="Description" />
+          <select id="filter-active">
+            <option value="">Any</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+          <button id="apply-filters" class="btn">Apply</button>
+        </div>
+        <div class="table-wrap">
+          <table id="products-table">
+            <colgroup>
+              <col style="width:16.66%" />
+              <col style="width:16.66%" />
+              <col style="width:16.66%" />
+              <col style="width:16.66%" />
+              <col style="width:16.66%" />
+              <col style="width:16.66%" />
+            </colgroup>
+            <thead>
+              <tr><th>ID</th><th>SKU</th><th>Name</th><th>Active</th><th>Description</th><th>Actions</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <button id="prev-page" class="btn btn-light">Prev</button>
+          <span id="page-info"></span>
+          <button id="next-page" class="btn btn-light">Next</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="webhooks-section" class="card">
+    <div class="header-row">
+      <h2>Webhooks</h2>
+      <div class="header-actions">
+        <button id="refresh-webhooks" class="btn">Refresh</button>
+      </div>
+    </div>
+    <div class="webhooks-layout">
+      <div class="table-wrap">
+        <table id="webhooks-table">
+          <colgroup>
+            <col style="width:16.66%" />
+            <col style="width:16.66%" />
+            <col style="width:16.66%" />
+            <col style="width:16.66%" />
+            <col style="width:16.66%" />
+            <col style="width:16.66%" />
+          </colgroup>
+          <thead>
+            <tr><th>ID</th><th>URL</th><th>Event</th><th>Enabled</th><th>Last</th><th>Actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="editor">
+        <h3>Add / Edit Webhook</h3>
+        <input id="wh-id" type="hidden" />
+        <div class="form-grid">
+          <label for="wh-url">URL</label>
+          <input id="wh-url" placeholder="https://example.com/webhook" />
+          <label for="wh-event">Event</label>
+          <input id="wh-event" value="import.completed" />
+          <label class="checkbox-row"><input type="checkbox" id="wh-enabled" checked /> Enabled</label>
+          <div class="form-actions">
+            <button id="save-webhook" class="btn">Save</button>
+            <button id="reset-webhook" class="btn btn-light">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
