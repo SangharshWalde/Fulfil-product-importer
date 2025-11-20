@@ -164,7 +164,7 @@ def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
         except Exception:
             pass
         logging.getLogger("app.main").error(str(e))
-        raise HTTPException(status_code=500, detail="Database error")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     # Dispatch background import (Celery-aware, with local fallback)
     use_celery = os.getenv("USE_CELERY", "false").lower() == "true"
     if use_celery:

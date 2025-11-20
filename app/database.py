@@ -3,7 +3,18 @@ import logging
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = os.getenv("DATABASE_URL") or f"sqlite:///{os.path.join(os.path.dirname(__file__), 'data.db')}"
+_env_db = os.getenv("DATABASE_URL")
+if _env_db:
+    DATABASE_URL = _env_db
+else:
+    _default_sqlite = os.path.join(os.path.dirname(__file__), 'data.db')
+    try:
+        os.makedirs(os.path.dirname(_default_sqlite), exist_ok=True)
+        with open(_default_sqlite, 'a'):
+            pass
+        DATABASE_URL = f"sqlite:///{_default_sqlite}"
+    except Exception:
+        DATABASE_URL = "sqlite:////tmp/data.db"
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
 
@@ -12,8 +23,10 @@ engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
     pool_pre_ping=True,
+    pool_size=5 if DATABASE_URL.startswith("postgresql") else None,
+    max_overflow=10 if DATABASE_URL.startswith("postgresql") else None,
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=True, expire_on_commit=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=engine)
 
 class Base(DeclarativeBase):
     pass

@@ -10,7 +10,7 @@ from . import models
 from .webhooks import dispatch_event
 
 logger = logging.getLogger("app.tasks")
-BATCH_SIZE = int(os.getenv("IMPORT_BATCH_SIZE", "1000"))
+BATCH_SIZE = int(os.getenv("IMPORT_BATCH_SIZE", "2000"))
 csv.field_size_limit(sys.maxsize)
 
 def _update_job(db, job_id: str, **kwargs):
